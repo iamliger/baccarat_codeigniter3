@@ -1,0 +1,22 @@
+{
+"css.lint.compatibleVendorPrefixes": "ignore",
+  "css.lint.unknownProperties": "ignore",
+  "scss.lint.unknownProperties": "ignore",
+  "less.lint.unknownProperties": "ignore",
+
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": false,
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+
+  "editor.formatOnSave": true,
+  // 기본 내장 포맷터 사용(Prettier 미사용)
+  "[css]": { "editor.defaultFormatter": "vscode.css-language-features" },
+  "[scss]": { "editor.defaultFormatter": "vscode.css-language-features" },
+  "[less]": { "editor.defaultFormatter": "vscode.css-language-features" },
+  "[html]": { "editor.defaultFormatter": "vscode.html-language-features" },
+  "[javascript]": { "editor.defaultFormatter": "vscode.typescript-language-features" },
+  "[typescript]": { "editor.defaultFormatter": "vscode.typescript-language-features" },
+  "[php]": { "editor.defaultFormatter": "bmewburn.vscode-intelephense-client" }
+}
