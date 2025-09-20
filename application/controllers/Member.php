@@ -6,52 +6,141 @@ class Member extends CI_Controller
 
 	public function __construct()
 	{
-		parent::__construct();
-		$this->load->helper('url');
-		$this->load->library('session');
-		$this->load->model('member_model'); // Member 모델 로드
+		parent::__construct(); // !!! 이 줄을 추가해야 합니다 !!!
+		$this->load->helper(array('url', 'form', 'security', 'auth_helper'));
+		$this->load->library(array('session', 'form_validation', 'pagination')); // Pagination 라이브러리 로드
+		$this->load->model(array('member_model', 'shop_entity_model'));
 
 		check_level_access(10, 'login'); // 권한이 없으면 로그인 페이지로 리다이렉트
-
-		// 관리자 로그인 여부 확인 (Admin 컨트롤러와 동일)
-		if (!$this->session->userdata('logged_in') || !$this->session->userdata('is_admin')) {
-			redirect('login');
-		}
 	}
 
 	// 회원 목록 - 전체 회원
-	public function all()
+	public function all($page = 1) // $offset 대신 $page로 변경
 	{
-		$data['page_title'] = '전체 회원 목록';
-		$data['members'] = $this->member_model->get_all_members(); // 모든 회원 정보 가져오기
+		$this->load->library('pagination');
 
-		$this->load->view('layouts/admin_header', $data);
-		$this->load->view('layouts/admin_sidebar');
-		$this->load->view('admin/member/list_all', $data); // 회원 목록 뷰
-		$this->load->view('layouts/admin_footer');
+		$data['page_title'] = '전체 회원 목록';
+
+		$per_page = 10; // 페이지당 보여줄 항목 수
+
+		// --- 페이지네이션 offset 계산 수정 시작 ---
+		$offset = ($page - 1) * $per_page; // 페이지 번호를 실제 DB offset으로 변환
+		// --- 페이지네이션 offset 계산 수정 끝 ---
+
+		// 전체 회원 수 가져오기 (페이지네이션을 위해 필요)
+		$total_rows = $this->member_model->count_all_members();
+		$data['members'] = $this->member_model->get_all_members_paginated($per_page, $offset);
+
+		// 페이지네이션 설정
+		$config = array();
+		$config['base_url'] = base_url('admin/members/all');
+		$config['total_rows'] = $total_rows;
+		$config['per_page'] = $per_page;
+		$config['uri_segment'] = 4; // URI의 4번째 세그먼트 (admin/members/all/페이지번호)
+		$config['use_page_numbers'] = TRUE; // 페이지 번호를 사용
+		$config['num_links'] = 3; // 현재 페이지 좌우로 표시할 링크 수
+
+		// Bootstrap 5 스타일 적용 (이전 설정 그대로 유지)
+		$config['full_tag_open'] = '<ul class="pagination pagination-sm m-0 float-end">';
+		$config['full_tag_close'] = '</ul>';
+		$config['first_link'] = '«';
+		$config['last_link'] = '»';
+		$config['first_tag_open'] = '<li class="page-item">';
+		$config['first_tag_close'] = '</li>';
+		$config['last_tag_open'] = '<li class="page-item">';
+		$config['last_tag_close'] = '</li>';
+		$config['next_link'] = '&raquo;';
+		$config['prev_link'] = '&laquo;';
+		$config['prev_tag_open'] = '<li class="page-item">';
+		$config['prev_tag_close'] = '</li>';
+		$config['next_tag_open'] = '<li class="page-item">';
+		$config['next_tag_close'] = '</li>';
+		$config['cur_tag_open'] = '<li class="page-item active"><a href="#" class="page-link">';
+		$config['cur_tag_close'] = '</a></li>';
+		$config['num_tag_open'] = '<li class="page-item">';
+		$config['num_tag_close'] = '</li>';
+		$config['attributes'] = array('class' => 'page-link');
+
+		$this->pagination->initialize($config);
+		$data['pagination_links'] = $this->pagination->create_links();
+
+		$this->load_admin_view('admin/member/list_all', $data);
 	}
 
 	// 회원 상세 정보
 	public function detail($memberid = null)
 	{
 		if ($memberid === null) {
-			show_404(); // memberid가 없으면 404 페이지
+			show_404();
 		}
 
-		$data['member'] = $this->member_model->get_member_by_id($memberid); // 특정 회원 정보 가져오기
-
-		if (empty($data['member'])) {
-			show_404(); // 회원 정보가 없으면 404 페이지
+		$member = $this->member_model->get_member_by_id($memberid);
+		if (empty($member)) {
+			show_404();
 		}
 
-		$data['page_title'] = $data['member']['memberid'] . ' 회원 상세';
+		$data['member'] = $member;
+		$data['page_title'] = $member['memberid'] . ' 회원 상세';
 
-		// 여기서는 기본 정보 탭만 보여줍니다.
-		// 추후 다른 탭(보안, 권한 등)은 AJAX로 로드하거나 별도의 뷰 파일로 분리 가능
-		$this->load->view('layouts/admin_header', $data);
-		$this->load->view('layouts/admin_sidebar');
-		$this->load->view('admin/member/detail', $data); // 회원 상세 뷰
-		$this->load->view('layouts/admin_footer');
+		// 상위 관리자 드롭다운을 위한 목록 가져오기 (현재 사용자를 제외)
+		$data['potential_parents'] = $this->member_model->get_potential_parents($member['user_idx']);
+
+		// --- 수정 필요 부분 시작 ---
+		// 사용자에게 할당 가능한 조직/매장 엔티티 목록 가져오기 (해당 사용자 레벨에 맞는 엔티티만)
+		$data['assignable_entities'] = $this->member_model->get_assignable_entities($member['level']);
+		// --- 수정 필요 부분 끝 ---
+
+		$this->load_admin_view('admin/member/detail', $data);
+	}
+
+	// 회원 계층 정보 업데이트 처리
+	public function update_hierarchy($user_idx)
+	{
+		check_level_access(10, 'login');
+
+		if ($this->input->method() === 'post') {
+			$this->form_validation->set_rules('level', '레벨', 'required|integer|greater_than_equal_to[1]|less_than_equal_to[10]');
+			$this->form_validation->set_rules('parent_user_idx', '상위 관리자', 'integer');
+			$this->form_validation->set_rules('commission_rate', '수수료율', 'required|numeric|greater_than_equal_to[0]|less_than[1]');
+			$this->form_validation->set_rules('assigned_entity_id', '할당된 조직/매장', 'integer');
+
+			// --- 수정 필요 부분 시작 ---
+			// CodeIgniter 3에 alpha_numeric_dash 대신 alpha_dash 규칙을 사용
+			// memberid 필드가 폼에 직접 있는 것은 아니지만, 유효성 검사 규칙으로 정의
+			$this->form_validation->set_rules('memberid', '회원 아이디', 'alpha_dash');
+			// --- 수정 필요 부분 끝 ---
+
+			if ($this->form_validation->run() == FALSE) {
+				$this->session->set_flashdata('error', validation_errors());
+			} else {
+				$level           = $this->input->post('level');
+				$parent_user_idx = $this->input->post('parent_user_idx');
+				$commission_rate = $this->input->post('commission_rate');
+				$assigned_entity_id = $this->input->post('assigned_entity_id');
+
+				if ($parent_user_idx == $user_idx) {
+					$this->session->set_flashdata('error', '자기 자신을 상위 관리자로 설정할 수 없습니다.');
+					$member = $this->member_model->get_user_by_idx($user_idx);
+					if ($member) {
+						redirect('admin/member/detail/' . $member['memberid']);
+					} else {
+						redirect('admin/members/all');
+					}
+				}
+
+				if ($this->member_model->update_user_hierarchy($user_idx, $level, $parent_user_idx, $commission_rate, $assigned_entity_id)) {
+					$this->session->set_flashdata('success', '회원 계층 정보가 성공적으로 업데이트되었습니다.');
+				} else {
+					$this->session->set_flashdata('error', '회원 계층 정보 업데이트 중 오류가 발생했습니다.');
+				}
+			}
+		}
+		$member = $this->member_model->get_user_by_idx($user_idx);
+		if ($member) {
+			redirect('admin/member/detail/' . $member['memberid']);
+		} else {
+			redirect('admin/members/all');
+		}
 	}
 
 	// 다른 회원관리 기능들의 빈 메소드 (추후 구현)
@@ -155,11 +244,20 @@ class Member extends CI_Controller
 	}
 
 	// AdminLTE 레이아웃을 포함하여 뷰를 로드하는 헬퍼 메소드
-	private function load_admin_view($view_path, $data = array())
+	protected function load_admin_view($view_path, $data = array())
 	{
 		$this->load->view('layouts/admin_header', $data);
 		$this->load->view('layouts/admin_sidebar');
 		$this->load->view($view_path, $data);
 		$this->load->view('layouts/admin_footer');
+	}
+
+	// 어드민용 모든 회원 계층 트리 뷰
+	public function tree_view()
+	{
+		$data['page_title'] = '회원 계층 트리 뷰';
+		$data['all_users'] = $this->member_model->get_all_members_for_tree_view();
+
+		$this->load_admin_view('admin/member/tree_view', $data);
 	}
 }

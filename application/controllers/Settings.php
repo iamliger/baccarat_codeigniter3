@@ -20,37 +20,50 @@ class Settings extends CI_Controller
 		redirect('admin/settings/general_policy'); // 기본 정책 페이지로 리다이렉트
 	}
 
-	// 기본 정책 (가입/비밀번호/휴면)
+	// 기본 정책 (가입/비밀번호/휴면) 및 로그인 방식, ID/PW 규칙 설정
 	public function general_policy()
 	{
-		$data['page_title'] = '기본 정책 설정';
-		$setting_data = $this->settings_model->get_config();
+		$data['page_title'] = '기본 정책 및 인증 설정';
+		$settings = $this->settings_model->get_config(); // 모든 설정 가져오기
 
 		if ($this->input->method() === 'post') {
 			// 폼 유효성 검사
 			$this->form_validation->set_rules('min_password_length', '최소 비밀번호 길이', 'required|integer|greater_than_equal_to[6]');
 			$this->form_validation->set_rules('inactive_days', '휴면 계정 전환 일수', 'required|integer|greater_than_equal_to[30]');
+			$this->form_validation->set_rules('memberid_regex', '아이디 유효성 정규식', 'required'); // 정규식 유효성 검사는 별도 커스텀 룰 필요
+			$this->form_validation->set_rules('login_mode', '로그인 방식', 'required|in_list[memberid,email,both]');
 
 			if ($this->form_validation->run() == FALSE) {
 				$this->session->set_flashdata('error', validation_errors());
 			} else {
-				$policy_data = array(
-					'min_password_length' => $this->input->post('min_password_length'),
-					'inactive_days'       => $this->input->post('inactive_days'),
-					'allow_registration'  => $this->input->post('allow_registration') ? TRUE : FALSE
-				);
-				$setting_data['general_policy'] = json_encode($policy_data);
+				// 기존 general_policy JSON 필드에서 min_password_length가 있었다면 제거 (새 컬럼 사용)
+				// $policy_data = json_decode($settings['general_policy'] ?? '{}', TRUE);
+				// unset($policy_data['min_password_length']);
+				// $settings['general_policy'] = json_encode($policy_data);
 
-				if ($this->settings_model->update_config($setting_data)) {
-					$this->session->set_flashdata('success', '기본 정책이 성공적으로 업데이트되었습니다.');
+				$updated_settings = array(
+					'min_password_length'         => $this->input->post('min_password_length'),
+					'inactive_days'               => $this->input->post('inactive_days'),
+					'allow_registration'          => $this->input->post('allow_registration') ? TRUE : FALSE,
+					'memberid_regex'              => $this->input->post('memberid_regex'),
+					'password_requires_uppercase' => $this->input->post('password_requires_uppercase') ? TRUE : FALSE,
+					'password_requires_lowercase' => $this->input->post('password_requires_lowercase') ? TRUE : FALSE,
+					'password_requires_number'    => $this->input->post('password_requires_number') ? TRUE : FALSE,
+					'password_requires_special'   => $this->input->post('password_requires_special') ? TRUE : FALSE,
+					'login_mode'                  => $this->input->post('login_mode')
+				);
+
+				if ($this->settings_model->update_config($updated_settings)) {
+					$this->session->set_flashdata('success', '기본 정책 및 인증 설정이 성공적으로 업데이트되었습니다.');
 				} else {
-					$this->session->set_flashdata('error', '기본 정책 업데이트 중 오류가 발생했습니다.');
+					$this->session->set_flashdata('error', '설정 업데이트 중 오류가 발생했습니다.');
 				}
 				redirect('admin/settings/general_policy');
 			}
 		}
 
-		$data['general_policy'] = json_decode($setting_data['general_policy'], TRUE);
+		$data['settings'] = $settings; // 모든 설정을 뷰로 전달
+		// $data['general_policy'] = json_decode($settings['general_policy'], TRUE); // 기존 JSON 필드도 필요하면
 
 		$this->load_admin_view('admin/settings/general_policy', $data);
 	}

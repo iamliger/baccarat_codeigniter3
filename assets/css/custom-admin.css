@@ -1,0 +1,106 @@
+/* ────────────────────────────── */
+/* AdminLTE 사이드바 색상 오버라이드 (기존 내용 유지) */
+/* ────────────────────────────── */
+.app-sidebar .nav-item.active>.nav-link,
+.app-sidebar .nav-item.menu-open>.nav-link {
+	background-color: var(--bs-primary) !important;
+	color: white !important;
+}
+
+.app-sidebar .nav-item.menu-open>.nav-link p,
+.app-sidebar .nav-item.active>.nav-link p {
+	color: white !important;
+}
+
+.app-sidebar .nav-link p {
+	color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.app-sidebar .nav-link .nav-arrow {
+	color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.app-sidebar .nav-link.active .nav-arrow {
+	color: white !important;
+}
+
+.sidebar-menu .nav-treeview .nav-item>.nav-link {
+	padding-left: 1.8rem !important;
+}
+
+.sidebar-menu .nav-treeview .nav-treeview .nav-item>.nav-link {
+	padding-left: 2.8rem !important;
+}
+
+
+/* ────────────────────────────── */
+/* 트리 뷰 디자인 (추가) */
+/* ────────────────────────────── */
+.tree-container {
+	padding: 15px;
+	border: 1px solid #dee2e6;
+	border-radius: .25rem;
+	background-color: #f8f9fa;
+}
+
+.tree-view-list {
+	list-style: none;
+	padding-left: 0;
+	/* 기본 ul 들여쓰기 제거 */
+	margin: 5px 0;
+}
+
+/* 각 트리 항목 */
+.tree-view-item {
+	position: relative;
+	margin: 4px 0;
+	padding-left: 25px;
+	/* 꺾쇠 라인과 텍스트의 여백 */
+}
+
+/* ────────────────────────────── */
+/* 트리 라인 표시 (├─, └─) */
+/* ────────────────────────────── */
+.tree-view-item::before {
+	content: "├─ ";
+	position: absolute;
+	left: 0;
+	/* 왼쪽으로 정렬 */
+	top: 5px;
+	/* 텍스트 베이스라인에 맞춤 */
+	color: #6c757d;
+	font-family: monospace;
+}
+
+.tree-view-item:last-child::before {
+	content: "└─ ";
+}
+
+/* 접기/펴기 버튼과 아이콘 스타일 */
+.tree-toggle-btn {
+	position: absolute;
+	left: -20px;
+	/* 꺾쇠 라인과 겹치지 않도록 조정 */
+	top: 0;
+	width: 20px;
+	height: 20px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #6c757d;
+}
+
+.tree-toggle-icon {
+	transition: transform 0.2s ease-in-out;
+}
+
+.tree-toggle-btn[aria-expanded="true"] .tree-toggle-icon {
+	transform: rotate(90deg);
+	/* 펼쳐진 상태 (아래쪽 화살표) */
+}
+
+/* 자식 ul에 대한 추가 들여쓰기 */
+.tree-view-item .collapse>.tree-view-list {
+	padding-left: 20px;
+	/* 자식 목록 자체에 들여쓰기 */
+}
