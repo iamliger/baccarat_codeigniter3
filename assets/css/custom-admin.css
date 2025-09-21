@@ -46,28 +46,28 @@
 .tree-view-list {
 	list-style: none;
 	padding-left: 0;
-	/* 기본 ul 들여쓰기 제거 */
 	margin: 5px 0;
 }
 
-/* 각 트리 항목 */
 .tree-view-item {
 	position: relative;
 	margin: 4px 0;
 	padding-left: 25px;
-	/* 꺾쇠 라인과 텍스트의 여백 */
+}
+
+/* admin 계정 (루트 노드) */
+.tree-root-admin {
+	padding-left: 0 !important;
 }
 
 /* ────────────────────────────── */
-/* 트리 라인 표시 (├─, └─) */
+/* 트리 라인 (├─, └─) */
 /* ────────────────────────────── */
 .tree-view-item::before {
 	content: "├─ ";
 	position: absolute;
 	left: 0;
-	/* 왼쪽으로 정렬 */
 	top: 5px;
-	/* 텍스트 베이스라인에 맞춤 */
 	color: #6c757d;
 	font-family: monospace;
 }
@@ -76,11 +76,17 @@
 	content: "└─ ";
 }
 
-/* 접기/펴기 버튼과 아이콘 스타일 */
+/* 최상위 admin 노드에만 라인 없애기 */
+.tree-view-list>.tree-view-item.tree-root-admin::before {
+	content: none !important;
+}
+
+/* ────────────────────────────── */
+/* 토글 버튼 & 아이콘 */
+/* ────────────────────────────── */
 .tree-toggle-btn {
 	position: absolute;
 	left: -20px;
-	/* 꺾쇠 라인과 겹치지 않도록 조정 */
 	top: 0;
 	width: 20px;
 	height: 20px;
@@ -96,11 +102,15 @@
 
 .tree-toggle-btn[aria-expanded="true"] .tree-toggle-icon {
 	transform: rotate(90deg);
-	/* 펼쳐진 상태 (아래쪽 화살표) */
 }
 
-/* 자식 ul에 대한 추가 들여쓰기 */
+/* 자식 ul 들여쓰기 */
 .tree-view-item .collapse>.tree-view-list {
 	padding-left: 20px;
-	/* 자식 목록 자체에 들여쓰기 */
+}
+
+/* 토글 버튼 없는 자식 없 항목용 스페이서 */
+.tree-spacer {
+	display: inline-block;
+	width: 20px;
 }

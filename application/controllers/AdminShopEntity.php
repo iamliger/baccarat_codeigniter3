@@ -92,6 +92,7 @@ class AdminShopEntity extends CI_Controller
 				$parent_user_idx_for_new_manager = NULL; // 기본값: 부모 없음 (시스템 최상위)
 
 				$parent_entity_id_from_form = $this->input->post('parent_entity_id');
+
 				if ($parent_entity_id_from_form != 0 && $parent_entity_id_from_form !== NULL) {
 					// 상위 조직이 있다면, 그 상위 조직의 관리자를 찾아 부모로 설정
 					$parent_entity_info = $this->shop_entity_model->get_entity_by_id($parent_entity_id_from_form);
@@ -210,9 +211,7 @@ class AdminShopEntity extends CI_Controller
 				if ($managed_by_user_idx != 0 && $managed_by_user_idx !== NULL) {
 					$manager_user_info = $this->member_model->get_user_by_idx($managed_by_user_idx);
 					if ($manager_user_info) {
-						// --- 수정 필요 부분 시작 ---
-						// `parent_user_idx`는 상위 조직 관리자를 기반으로 다시 찾아야 함.
-						// 현재 조직의 상위 조직 ID를 가져와서, 그 조직의 관리자를 찾습니다.
+
 						$current_entity_info = $this->shop_entity_model->get_entity_by_id($id);
 						$parent_user_idx_for_manager = NULL;
 						if (!empty($current_entity_info['parent_entity_id'])) {

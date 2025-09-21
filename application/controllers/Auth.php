@@ -100,7 +100,8 @@ class Auth extends CI_Controller
 						'email'     => $user['email'],
 						'level'     => $user['level'],
 						'status'    => $user['status'],
-						'logged_in' => TRUE
+						'logged_in' => TRUE,
+						'assigned_entity_id' => $user['assigned_entity_id']
 					);
 					$this->session->set_userdata($userdata);
 

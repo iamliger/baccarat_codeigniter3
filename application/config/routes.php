@@ -62,14 +62,13 @@ $route['admin/dashboard'] = 'Admin/dashboard';
 // Member 컨트롤러 라우팅 (기존 내용 유지)
 $route['admin/members/all'] = 'Member/all';
 $route['admin/members/all/(:num)'] = 'Member/all/$1';
+
 $route['admin/members/new'] = 'Member/new_members';
 $route['admin/members/pending_verification'] = 'Member/pending_verification';
 $route['admin/members/inactive'] = 'Member/inactive';
 $route['admin/members/sanctioned'] = 'Member/sanctioned';
 $route['admin/members/withdrawn'] = 'Member/withdrawn';
 
-$route['admin/member/detail/(:any)'] = 'Member/detail/$1';
-$route['admin/member/detail/security/(:any)'] = 'Member/detail_security/$1';
 $route['admin/member/verification/status'] = 'Member/verification_status';
 $route['admin/member/verification/kyc'] = 'Member/kyc_review';
 $route['admin/member/verification/sanction_history'] = 'Member/sanction_history';
@@ -82,7 +81,9 @@ $route['admin/member/inquiries/status'] = 'Member/inquiries_status';
 $route['admin/member/inquiries/template'] = 'Member/inquiries_template';
 $route['admin/member/withdrawal_management'] = 'Member/withdrawal_management';
 
+$route['admin/member/detail/(:any)/(:any)'] = 'Member/detail/$1/$2'; // memberid와 탭 이름을 파라미터로 전달
 $route['admin/member/detail/(:any)'] = 'Member/detail/$1'; // 회원 상세
+
 $route['admin/member/update_hierarchy/(:num)'] = 'Member/update_hierarchy/$1'; // 회원 계층 정보 업데이트
 
 // 조직/매장 관리 라우팅 (AdminShopEntity 컨트롤러)
@@ -99,6 +100,50 @@ $route['admin/maintenance/reset_database'] = 'AdminMaintenance/reset_database';
 
 // 회원 계층 트리 뷰
 $route['admin/members/tree_view'] = 'Member/tree_view';
+
+// Admin 컨트롤러 라우팅 (나머지 메뉴)
+// 홈 (요약)
+$route['admin/summary/realtime_metrics'] = 'Admin/summary_realtime_metrics';
+$route['admin/summary/notification_center'] = 'Admin/summary_notification_center';
+$route['admin/summary/quick_actions'] = 'Admin/summary_quick_actions';
+
+// 게임관리
+$route['admin/game/logic1'] = 'Admin/game_logic1';
+$route['admin/game/logic2'] = 'Admin/game_logic2';
+$route['admin/game/logic3'] = 'Admin/game_logic3';
+$route['admin/game/logic4'] = 'Admin/game_logic4';
+$route['admin/game/ai_logic_management'] = 'Admin/game_ai_logic_management';
+
+// 권한/역할 관리
+$route['admin/permissions/admin_accounts'] = 'Admin/permissions_admin_accounts';
+$route['admin/permissions/role_definitions'] = 'Admin/permissions_role_definitions';
+$route['admin/permissions/access_control'] = 'Admin/permissions_access_control';
+
+// 콘텐츠/공지
+$route['admin/content/notices'] = 'Admin/content_notices';
+$route['admin/content/banners'] = 'Admin/content_banners';
+$route['admin/content/faq'] = 'Admin/content_faq';
+
+// 결제/정산
+$route['admin/payments/transactions'] = 'Admin/payments_transactions';
+$route['admin/payments/deposit_withdrawal_review'] = 'Admin/payments_deposit_withdrawal_review';
+$route['admin/payments/sales_report'] = 'Admin/payments_sales_report';
+
+// 로그/감사
+$route['admin/logs/system'] = 'Admin/logs_system';
+$route['admin/logs/security'] = 'Admin/logs_security';
+$route['admin/logs/admin_activity'] = 'Admin/logs_admin_activity';
+
+// 통계/리포트
+$route['admin/statistics/join_churn_analysis'] = 'Admin/statistics_join_churn_analysis';
+$route['admin/statistics/activity_metrics'] = 'Admin/statistics_activity_metrics';
+$route['admin/statistics/segment_performance'] = 'Admin/statistics_segment_performance';
+$route['admin/statistics/custom_reports'] = 'Admin/statistics_custom_reports';
+
+// 시스템 설정 (Settings 컨트롤러가 담당하는 부분 제외)
+$route['admin/settings/notification_channels'] = 'Admin/settings_notification_channels';
+$route['admin/settings/privacy_security'] = 'Admin/settings_privacy_security';
+$route['admin/settings/integrations'] = 'Admin/settings_integrations';
 
 // Admin 컨트롤러의 다른 모든 페이지를 처리 (위의 명시적인 라우팅보다 뒤에 위치)
 $route['admin/(:any)'] = 'Admin/$1';

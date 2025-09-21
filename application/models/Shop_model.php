@@ -7,16 +7,7 @@ class Shop_model extends CI_Model
 	public function __construct()
 	{
 		parent::__construct();
-		$this->load->helper(array('url', 'auth_helper', 'form_helper')); // form_helper 추가
-		$this->load->library(array('session', 'form_validation', 'pagination')); // pagination 추가
-		$this->load->model(array('shop_model', 'member_model', 'settings_model')); // settings_model 추가
-
-		// 레벨 3-9 매장 관리자만 접근 가능
-		$user_level = get_user_level();
-		if (!is_logged_in() || $user_level < 3 || $user_level > 9) {
-			$this->session->set_flashdata('error', '매장관리자만 접근 가능한 페이지입니다.');
-			redirect('login');
-		}
+		$this->load->database();
 	}
 
 	public function index()
@@ -277,7 +268,7 @@ class Shop_model extends CI_Model
 
 		$this->db->select('user_idx, memberid, level, status, created_at, parent_user_idx, commission_rate, lineage_path');
 		$this->db->from('users');
-		$this->db->like('lineage_path', $parent_lineage_path . '%', 'after'); // 하위 라인 조회
+		$this->db->like('lineage_path', $parent_lineage_path, 'after'); // 하위 라인 조회
 
 		if (!$include_self) {
 			$this->db->where('user_idx !=', $parent_user_idx); // 자기 자신 제외
@@ -288,6 +279,12 @@ class Shop_model extends CI_Model
 
 		$this->db->order_by('lineage_path', 'ASC');
 		$query = $this->db->get();
+
+		// --- 디버그 메시지 추가 ---
+		log_message('error', 'Shop_model::get_descendants - SQL Query: ' . $this->db->last_query());
+		log_message('error', 'Shop_model::get_descendants - Result: ' . print_r($query->result_array(), TRUE));
+		// ---------------------------
+
 		return $query->result_array();
 	}
 

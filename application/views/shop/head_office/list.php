@@ -9,6 +9,9 @@
           </div>
           <!-- /.card-header -->
           <div class="card-body p-0">
+            <!-- --- 디버그 메시지 추가 --- -->
+            <?php log_message('error', 'shop/head_office/list.php - child_items in view: ' . print_r($child_items, TRUE)); ?>
+            <!-- --------------------------- -->
             <div class="table-responsive">
               <table class="table table-hover table-striped table-bordered" role="table">
                 <thead>
@@ -26,11 +29,12 @@
                   <?php if (!empty($child_items)): ?>
                   <?php foreach ($child_items as $child): ?>
                   <?php
-											$financial_summary = $child_financial_summaries[$child['user_idx']] ?? [];
-											$child_gross_revenue = $financial_summary['total_gross_revenue'] ?? 0;
-											$child_expenses = $financial_summary['total_expenses'] ?? 0;
-											$child_net_profit = $financial_summary['total_net_profit'] ?? 0;
-											?>
+												// 재무 요약 데이터는 $child['user_idx']를 키로 사용하므로, 존재 여부 확인
+												$financial_summary = $child_financial_summaries[$child['user_idx']] ?? [];
+												$child_gross_revenue = $financial_summary['total_gross_revenue'] ?? 0;
+												$child_expenses = $financial_summary['total_expenses'] ?? 0;
+												$child_net_profit = $financial_summary['total_net_profit'] ?? 0;
+										?>
                   <tr class="align-middle">
                     <td><?php echo htmlspecialchars($child['memberid']); ?></td>
                     <td><?php echo format_user_level_display($child['level']); ?></td>
@@ -38,7 +42,7 @@
                     <td><?php echo number_format($child_expenses, 2); ?></td>
                     <td><?php echo number_format($child_net_profit, 2); ?></td>
                     <td><?php echo number_format($child['commission_rate'] * 100, 2); ?>%</td>
-                    <td><a href="<?php echo base_url('shop/detail/' . $child['memberid']); ?>"
+                    <td><a href="<?php echo base_url('shop/detail/' . htmlspecialchars($child['memberid'])); ?>"
                         class="btn btn-sm btn-outline-info">보기</a></td>
                   </tr>
                   <?php endforeach; ?>

@@ -48,7 +48,10 @@ class Db_maintenance_model extends CI_Model
 			'level'    => 10,
 			'status'   => 'approved',
 			'created_at' => date('Y-m-d H:i:s'),
-			'lineage_path' => '/1/' // 어드민의 user_idx가 1이라고 가정
+			'parent_user_idx' => NULL, // admin은 최상위이므로 NULL
+			'commission_rate' => 0.0000,
+			'lineage_path' => NULL, // 초기에는 NULL, 삽입 후 user_idx를 기반으로 업데이트
+			'assigned_entity_id' => NULL // 어드민은 특정 엔티티에 할당되지 않음
 		);
 		// 이미 admin 계정이 있다면 업데이트, 없으면 삽입
 		$this->db->replace('users', $admin_data);
@@ -79,11 +82,6 @@ class Db_maintenance_model extends CI_Model
 			'notification_channels'       => '{}',
 			'privacy_security'            => '{}',
 			'integrations'                => '{}',
-			// 기타 필드는 NULL 또는 기본값
-			'logic3_patterns'             => NULL,
-			'logic2_patterns'             => NULL,
-			'profit_rate'                 => NULL,
-			'another_setting'             => NULL,
 		);
 		$this->db->replace('baccara_config', $default_config);
 

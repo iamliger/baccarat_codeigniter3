@@ -9,14 +9,12 @@ class Shop extends CI_Controller
 		parent::__construct();
 		$this->load->helper(array('url', 'auth_helper', 'form_helper'));
 		$this->load->library(array('session', 'form_validation', 'pagination'));
-		// --- 수정 필요 부분 시작 ---
 		$this->load->model(array('shop_model', 'member_model', 'settings_model', 'auth_model')); // auth_model 로드
-		// --- 수정 필요 부분 끝 ---
 
 		$user_level = get_user_level();
 		if (!is_logged_in() || $user_level < 3 || $user_level > 9) {
-			$this->session->set_flashdata('error', '매장관리자만 접근 가능한 페이지입니다.');
-			redirect('login');
+				$this->session->set_flashdata('error', '매장관리자만 접근 가능한 페이지입니다.');
+				redirect('login');
 		}
 	}
 
@@ -89,12 +87,26 @@ class Shop extends CI_Controller
 
 		$data['page_title'] = $page_title;
 		$data['target_entity_level'] = $target_entity_level;
-		$data['parent_entity_id_for_new_entity'] = $this->session->userdata('assigned_entity_id'); // 현재 관리자의 조직 ID
+
+		$parent_entity_id_from_session = $this->session->userdata('assigned_entity_id');
+		$data['parent_entity_id_for_new_entity'] = ($parent_entity_id_from_session === NULL || $parent_entity_id_from_session == '') ? 0 : $parent_entity_id_from_session;
+
+		// 상위 조직 이름을 뷰로 전달하기 위해 조회
+		$CI = &get_instance();
+		if (!isset($CI->shop_entity_model)) {
+			$CI->load->model('shop_entity_model');
+		}
+		$parent_entity_info = $CI->shop_entity_model->get_entity_by_id($data['parent_entity_id_for_new_entity']);
+		$data['parent_entity_name'] = $parent_entity_info['entity_name'] ?? '없음';
+		// --- 수정 필요 부분 끝 ---
 
 		// 폼 유효성 검사 및 처리
 		if ($this->input->method() === 'post') {
 			$this->form_validation->set_rules('entity_name', '조직/매장 이름', 'required|max_length[100]');
 			$this->form_validation->set_rules('entity_code', '조직/매장 코드', 'required|max_length[50]|is_unique[shop_entities.entity_code]');
+
+			$this->form_validation->set_rules('entity_level', '조직 레벨', 'required|integer|greater_than_equal_to[3]|less_than_equal_to[9]');
+			$this->form_validation->set_rules('parent_entity_id', '상위 조직 ID', 'integer');
 
 			// 관리자 계정 생성 필드
 			$this->form_validation->set_rules('manager_memberid', '관리자 아이디', 'required|alpha_dash|min_length[4]|is_unique[users.memberid]');
@@ -303,6 +315,10 @@ class Shop extends CI_Controller
 			$target_level
 		);
 
+		// --- 디버그 메시지 추가 ---
+		log_message('error', 'Shop::_load_child_list_view - child_items: ' . print_r($data['child_items'], TRUE));
+		// ---------------------------
+
 		// 재무 요약 데이터 가져오기 (각 하위 항목의 재무 요약)
 		$child_user_idxes = array_column($data['child_items'], 'user_idx');
 		if (!empty($child_user_idxes)) {
@@ -314,6 +330,35 @@ class Shop extends CI_Controller
 		}
 
 		$this->load_shop_view($view_path, $data);
+	}
+
+	// 개별 하위 관리자 또는 회원의 상세 정보 페이지
+	public function detail($memberid = null)
+	{
+		if ($memberid === null) { show_404(); }
+
+		$member = $this->member_model->get_member_by_id($memberid);
+		if (empty($member)) { show_404(); }
+
+		$data['page_title'] = $member['memberid'] . ' 하위 상세 정보';
+		$data['member'] = $member;
+
+		// 현재 로그인한 매장 관리자가 해당 멤버를 관리하는 하위 라인에 속하는지 확인하는 로직
+		$current_user_info = $this->member_model->get_user_by_idx($this->session->userdata('user_idx'));
+		$current_user_lineage_path = $current_user_info['lineage_path'];
+
+		// 중요: admin은 모든 라인을 볼 수 있으므로 예외 처리
+		if (get_user_level() != 10 && strpos($member['lineage_path'], $current_user_lineage_path) === FALSE && $member['user_idx'] != $this->session->userdata('user_idx')) {
+				$this->session->set_flashdata('error', '해당 회원의 상세 정보를 조회할 권한이 없습니다.');
+				redirect('shop'); // 권한 없으면 shop 대시보드로
+		}
+
+		// 재무 요약 정보 (선택적)
+		$end_date = date('Y-m-d');
+		$start_date = date('Y-m-d', strtotime('-7 days'));
+		$data['financial_summary'] = $this->shop_model->get_my_financial_summary($member['user_idx'], $start_date, $end_date);
+
+		$this->load_shop_view('shop/detail', $data);
 	}
 
 	// 매장 관리자 AdminLTE 레이아웃을 포함하여 뷰를 로드하는 헬퍼 메소드

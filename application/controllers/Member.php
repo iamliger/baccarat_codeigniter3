@@ -68,27 +68,28 @@ class Member extends CI_Controller
 	}
 
 	// 회원 상세 정보
-	public function detail($memberid = null)
+	public function detail($memberid = null, $tab = 'basic')
 	{
+		// --- 디버그 로그 시작 ---
+		log_message('debug', 'Member/detail - Called with $memberid: ' . ($memberid ?? 'NULL') . ', $active_tab: ' . ($active_tab ?? 'NULL'));
+		// --- 디버그 로그 끝 ---
+
 		if ($memberid === null) {
 			show_404();
 		}
 
 		$member = $this->member_model->get_member_by_id($memberid);
+
 		if (empty($member)) {
+			log_message('error', 'Member/detail - Member not found for memberid: ' . $memberid . ', showing 404.');
 			show_404();
 		}
 
 		$data['member'] = $member;
 		$data['page_title'] = $member['memberid'] . ' 회원 상세';
-
-		// 상위 관리자 드롭다운을 위한 목록 가져오기 (현재 사용자를 제외)
 		$data['potential_parents'] = $this->member_model->get_potential_parents($member['user_idx']);
-
-		// --- 수정 필요 부분 시작 ---
-		// 사용자에게 할당 가능한 조직/매장 엔티티 목록 가져오기 (해당 사용자 레벨에 맞는 엔티티만)
 		$data['assignable_entities'] = $this->member_model->get_assignable_entities($member['level']);
-		// --- 수정 필요 부분 끝 ---
+		$data['active_tab'] = $tab;
 
 		$this->load_admin_view('admin/member/detail', $data);
 	}

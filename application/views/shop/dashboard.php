@@ -121,35 +121,3 @@
   </div><!-- /.container-fluid -->
 </div>
 <!-- /.content -->
-
-<!-- Shop 대시보드에도 트리 뷰 JavaScript 포함 -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('.tree-toggle-btn').forEach(button => {
-    button.addEventListener('click', function() {
-      const icon = this.querySelector('.tree-toggle-icon');
-      if (icon) {
-        const targetId = this.getAttribute('data-bs-target');
-        const targetElement = document.querySelector(targetId);
-
-        targetElement.addEventListener('show.bs.collapse', function() {
-          icon.classList.remove('bi-chevron-right');
-          icon.classList.add('bi-chevron-down');
-        });
-        targetElement.addEventListener('hide.bs.collapse', function() {
-          icon.classList.remove('bi-chevron-down');
-          icon.classList.add('bi-chevron-right');
-        });
-
-        if (targetElement.classList.contains('show')) {
-          icon.classList.remove('bi-chevron-right');
-          icon.classList.add('bi-chevron-down');
-        } else {
-          icon.classList.remove('bi-chevron-down');
-          icon.classList.add('bi-chevron-right');
-        }
-      }
-    });
-  });
-});
-</script>
